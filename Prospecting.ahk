@@ -122,7 +122,7 @@ F2:: {
     return
 }
 
-; --- TECLA DE FIM (F2) ---
+; --- TECLA DE FIM (F4) ---
 F4:: {
     Reload() ; Para e recarrega o script
 }
