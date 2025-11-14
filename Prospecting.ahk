@@ -1,6 +1,6 @@
 ﻿#Requires AutoHotkey v2.0
 
-; Author: Caiofb47 xD
+; Author: Caiofb47.
 ; Description: Script para automatizar o processo de prospecting no jogo Prospecting.
 
 ; Tutorial: Ative a trava de shift (Shift Lock) no jogo para facilitar o movimento.
