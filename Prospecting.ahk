@@ -5,8 +5,10 @@
 
 ; Tutorial: Ative a trava de shift (Shift Lock) no jogo para facilitar o movimento.
 ; Se pozicionar o personagem corretamente, com o rio a sua esquerda e a área de mineração a sua direita.
-; Pressione F1 para iniciar o script (Modo Normal).
-; Pressione F2 para iniciar o script (Modo Rápido/2x).
+; Pressione F1 para iniciar o ciclo completo (Modo Normal).
+; Pressione F2 para iniciar o ciclo completo (Modo Rápido/2x).
+; Pressione C para apenas COLETAR (usa config F1).
+; Pressione V para apenas LAVAR (usa config F1).
 ; Pressione F4 para parar o script a qualquer momento.
 
 ; =====================================================================
@@ -23,18 +25,18 @@ pausaAntesRepetir := 500    ; (ms) Pausa final antes de recomeçar o ciclo
 ; =====================================================================
 
 
+tempoCliqueAreiaPerfeito := 475 ; (ms) Tempo em para coleta de areia perfeita.
+
 ; ===================================================================== 
 ; --- Configuração Perfil 1 (F1) ---
 cliquesParaEncher_F1 := 5
-tempoCliqueAreia_F1 := 600
-tempoLavarBateia_F1 := 10000
+tempoLavarBateia_F1 := 7000
 ; =====================================================================
 
-; ===================================================================== 
 ; --- Configuração Perfil 2 (F2) ---
-cliquesParaEncher_F2 := 5
-tempoCliqueAreia_F2 := 600
-tempoLavarBateia_F2 := 10000
+; ===================================================================== 
+cliquesParaEncher_F2 := 2
+tempoLavarBateia_F2 := 4000
 ; =====================================================================
 
 
@@ -43,18 +45,56 @@ tempoLavarBateia_F2 := 10000
 ; =====================================================================
 
 F1:: {
-    ; Chama a função principal com as configurações do PERFIL 1
-    ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreia_F1, tempoLavarBateia_F1)
+    ; Chama a função de ciclo com as configurações do PERFIL 1
+    ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
 }
 
 F2:: {
-    ; Chama a MESMA função principal, mas com as configurações do PERFIL 2
-    ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreia_F2, tempoLavarBateia_F2)
+    ; Chama a MESMA função de ciclo, mas com as configurações do PERFIL 2
+    ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
 }
 
 ; --- TECLA DE FIM (F4) ---
 F4:: {
     Reload() ; Para e recarrega o script
+}
+
+; --- AÇÃO ÚNICA: Coletar (C) ---
+c:: {
+    ; Coleta areia UMA VEZ usando o perfil F1
+    ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
+    return
+}
+
+; --- AÇÃO ÚNICA: Lavar (V) ---
+v:: {
+    ; Lava a bateia UMA VEZ usando o perfil F1
+    LavarBateia(tempoLavarBateia_F1)
+    return
+}
+
+
+; =====================================================================
+; --- BLOCOS DE AÇÃO (Novas Funções) ---
+; =====================================================================
+
+; --- PARTE 1: Função de Coletar Areia ---
+ColetarAreia(numCliques, tempoClique) {
+    Loop numCliques {
+        Send "{LButton down}"
+        Sleep(tempoClique)
+        Send "{LButton up}"
+        Sleep(pausaEntreCliques)
+    }
+}
+
+; --- PARTE 3: Função de Lavar a Bateia ---
+LavarBateia(tempoLavagem) {
+    Click() ; 1 clique inicial para ativar
+    Sleep(pausaAntesLavar)
+    Send "{LButton down}" ; Segura o clique para lavar
+    Sleep(tempoLavagem)
+    Send "{LButton up}"
 }
 
 
@@ -68,12 +108,7 @@ ExecutarCiclo(numCliques, tempoClique, tempoLavagem) {
     Loop totalRepeticoes {
         
         ; --- PARTE 1: Enchendo a bateia com areia ---
-        Loop numCliques { ; <-- Usa a variável da função
-            Send "{LButton down}"
-            Sleep(tempoClique) ; <-- Usa a variável da função
-            Send "{LButton up}"
-            Sleep(pausaEntreCliques)
-        }
+        ColetarAreia(numCliques, tempoClique) ; <-- CHAMA A FUNÇÃO
         
         Sleep(pausaAposEncher) ; Pausa extra após encher
 
@@ -83,11 +118,7 @@ ExecutarCiclo(numCliques, tempoClique, tempoLavagem) {
         Send "{a up}"
 
         ; --- PARTE 3: Limpando a bateia no rio ---
-        Click() ; 1 clique inicial para ativar
-        Sleep(pausaAntesLavar)
-        Send "{LButton down}" ; Segura o clique para lavar
-        Sleep(tempoLavagem) ; <-- Usa a variável da função
-        Send "{LButton up}"
+        LavarBateia(tempoLavagem) ; <-- CHAMA A FUNÇÃO
 
         Sleep(pausaAposLavar) ; Pausa após lavar
         
