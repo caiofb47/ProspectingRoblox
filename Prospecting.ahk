@@ -3,13 +3,15 @@
 ; Author: Caiofb47.
 ; Description: Script para automatizar o processo de prospecting no jogo Prospecting.
 
-; Tutorial: Ative a trava de shift (Shift Lock) no jogo para facilitar o movimento.
+; Tutorial:
 ; Se pozicionar o personagem corretamente, com o rio a sua esquerda e a área de mineração a sua direita.
 ; Pressione F1 para iniciar o ciclo completo (Modo Normal).
 ; Pressione F2 para iniciar o ciclo completo (Modo Rápido/2x).
-; Pressione C para apenas COLETAR (usa config F1).
-; Pressione V para apenas LAVAR (usa config F1).
 ; Pressione F4 para parar o script a qualquer momento.
+
+; Pressione F5 para apenas COLETAR (usa config F1).
+; Pressione F6 para apenas COLETAR (usa config F2).
+; Pressione F8 para apenas LAVAR (usa config F1).
 
 ; =====================================================================
 ; --- Configurações Principais (Compartilhadas) ---
@@ -31,7 +33,6 @@ tempoCliqueAreiaPerfeito := 250 ; (ms) Tempo em para coleta de areia perfeita.
 ; --- Configuração Perfil 1 (F1) ---
 cliquesParaEncher_F1 := 2
 tempoLavarBateia_F1 := 5000
-; =====================================================================
 
 ; --- Configuração Perfil 2 (F2) ---
 ; ===================================================================== 
@@ -59,15 +60,22 @@ F4:: {
     Reload() ; Para e recarrega o script
 }
 
-; --- AÇÃO ÚNICA: Coletar (C) ---
-c:: {
+; --- AÇÃO ÚNICA: Coletar (F5) ---
+F5:: {
     ; Coleta areia UMA VEZ usando o perfil F1
     ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
     return
 }
 
-; --- AÇÃO ÚNICA: Lavar (V) ---
-v:: {
+; --- AÇÃO ÚNICA: Coletar (F6) ---
+F6:: {
+    ; Coleta areia UMA VEZ usando o perfil F2
+    ColetarAreia(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito)
+    return
+}
+
+; --- AÇÃO ÚNICA: Lavar (F8) ---
+F8:: {
     ; Lava a bateia UMA VEZ usando o perfil F1
     LavarBateia(tempoLavarBateia_F1)
     return
