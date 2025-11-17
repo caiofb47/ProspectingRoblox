@@ -35,7 +35,6 @@ cliquesParaEncher_F1 := 2
 tempoLavarBateia_F1 := 5000
 
 ; --- Configuração Perfil 2 (F2) ---
-; ===================================================================== 
 cliquesParaEncher_F2 := 1
 tempoLavarBateia_F2 := 3000
 ; =====================================================================
