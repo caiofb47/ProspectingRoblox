@@ -15,8 +15,8 @@
 ; --- Configurações Principais (Compartilhadas) ---
 ; =====================================================================
 totalRepeticoes := 100      ; Quantas vezes o ciclo todo vai repetir
-tempoAndarRio := 1000       ; (ms) Tempo andando (A) para o RIO
-tempoAndarTerra := 1000     ; (ms) Tempo andando (D) para a TERRA
+tempoAndarRio := 500       ; (ms) Tempo andando (A) para o RIO
+tempoAndarTerra := 500     ; (ms) Tempo andando (D) para a TERRA
 pausaEntreCliques := 1000   ; (ms) Pausa entre cada clique da PARTE 1
 pausaAposEncher := 1000     ; (ms) Pausa após encher a bateia (antes de andar)
 pausaAntesLavar := 500      ; (ms) Pausa entre o clique e segurar o clique (PARTE 3)
@@ -25,18 +25,18 @@ pausaAntesRepetir := 500    ; (ms) Pausa final antes de recomeçar o ciclo
 ; =====================================================================
 
 
-tempoCliqueAreiaPerfeito := 475 ; (ms) Tempo em para coleta de areia perfeita.
+tempoCliqueAreiaPerfeito := 250 ; (ms) Tempo em para coleta de areia perfeita.
 
 ; ===================================================================== 
 ; --- Configuração Perfil 1 (F1) ---
-cliquesParaEncher_F1 := 5
-tempoLavarBateia_F1 := 7000
+cliquesParaEncher_F1 := 2
+tempoLavarBateia_F1 := 5000
 ; =====================================================================
 
 ; --- Configuração Perfil 2 (F2) ---
 ; ===================================================================== 
-cliquesParaEncher_F2 := 2
-tempoLavarBateia_F2 := 4000
+cliquesParaEncher_F2 := 1
+tempoLavarBateia_F2 := 3000
 ; =====================================================================
 
 
