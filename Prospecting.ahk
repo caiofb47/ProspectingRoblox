@@ -1,9 +1,9 @@
 ﻿#Requires AutoHotkey v2.0
 CoordMode "Mouse", "Window"
-SetKeyDelay 50, 50 ; IMPORTANTE: Faz todas as teclas terem um atraso natural (50ms pressionando)
+SetKeyDelay 50, 50 ; Atraso natural para o Roblox registrar as teclas
 
 ; Author: Caiofb47.
-; Description: Script otimizado para Prospecting (Venda Blindada).
+; Description: Script otimizado para Prospecting (Venda Blindada + Parada Segura).
 
 ; =====================================================================
 ; --- CONFIGURAÇÕES PRINCIPAIS ---
@@ -30,7 +30,7 @@ posY_Centro := 484
 ; Teclas e Tempos de Menu
 teclaMenuVendas := "'"
 teclaFerramenta := "1"
-pausaAbrirMenu := 800       ; Aumentei para garantir que a animação termine
+pausaAbrirMenu := 800
 pausaAntesVender := 500
 pausaAposVender := 1000
 
@@ -47,23 +47,34 @@ tempoLavarBateia_F2 := 3000
 ; =====================================================================
 F1::ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
 F2::ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
-F4::Reload()
+
+; F4 AGORA COM SEGURANÇA
+F4:: {
+    SendEvent "{LButton up}"
+    SendEvent "{a up}"
+    SendEvent "{d up}"
+    SendEvent "{1 up}"
+    SendEvent "{' up}"
+    ToolTip "🛑 PARANDO..."
+    Sleep(500)
+    ToolTip
+    Reload()
+}
 
 ; Testes
 F5::ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
 F8::LavarBateia(tempoLavarBateia_F1)
-F9::VenderItens() ; Teste a nova lógica de venda aqui
+F9::VenderItens()
 
 ; =====================================================================
 ; --- FUNÇÕES DE AÇÃO ---
 ; =====================================================================
 
-; Função auxiliar para garantir que a tecla seja lida pelo jogo
 ApertarComForca(tecla) {
-    SendEvent "{" tecla " down}" ; Segura a tecla
-    Sleep(150)                   ; Mantém segurada por 150ms (Isso é muito tempo pro PC, mas ideal pro jogo)
-    SendEvent "{" tecla " up}"   ; Solta a tecla
-    Sleep(100)                   ; Pausa extra pós-tecla
+    SendEvent "{" tecla " down}"
+    Sleep(150)
+    SendEvent "{" tecla " up}"
+    Sleep(100)
 }
 
 ColetarAreia(numCliques, tempoClique) {
@@ -87,26 +98,25 @@ LavarBateia(tempoLavagem) {
 VenderItens() {
     Sleep(pausaAntesVender)
     
-    ; 1. DESEQUIPAR (Com força)
+    ; 1. DESEQUIPAR
     ApertarComForca(teclaFerramenta)
     Sleep(500)
     
-    ; 2. ABRIR MENU (Com força)
+    ; 2. ABRIR MENU
     ApertarComForca(teclaMenuVendas)
-    Sleep(pausaAbrirMenu) ; Espera animação
+    Sleep(pausaAbrirMenu)
     
     ; 3. MOVER E "TREMER" O MOUSE
     MouseMove(posX_Vender, posY_Vender)
     Sleep(100)
-    ; Move 1 pixel pro lado e volta para forçar o jogo a ver o mouse
     MouseMove(posX_Vender + 2, posY_Vender) 
     Sleep(50)
     MouseMove(posX_Vender, posY_Vender)
-    Sleep(300) ; Espera botão "acender"
+    Sleep(300)
     
-    ; 4. CLIQUE DE VENDA (Lento e Seguro)
+    ; 4. CLIQUE DE VENDA
     SendEvent "{LButton down}"
-    Sleep(150) ; Segura o clique
+    Sleep(150)
     SendEvent "{LButton up}"
     Sleep(200)
     
@@ -114,11 +124,11 @@ VenderItens() {
     MouseMove(posX_Centro, posY_Centro)
     Sleep(300)
     
-    ; 6. FECHAR MENU (Com força)
+    ; 6. FECHAR MENU
     ApertarComForca(teclaMenuVendas)
-    Sleep(800) ; Espera fechar visualmente
+    Sleep(800)
     
-    ; 7. EQUIPAR (Com força)
+    ; 7. EQUIPAR
     ApertarComForca(teclaFerramenta)
     Sleep(800)
     
