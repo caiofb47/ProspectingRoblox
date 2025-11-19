@@ -16,7 +16,7 @@ pausaAposEncher := 1000
 pausaAntesLavar := 500
 pausaAposLavar := 1000
 pausaAntesRepetir := 500
-tempoCliqueAreiaPerfeito := 450
+tempoCliqueAreiaPerfeito := 425
 
 ; --- CONFIGURAÇÃO DE VENDA ---
 ciclosParaVender := 10
