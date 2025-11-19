@@ -1,163 +1,163 @@
 ﻿#Requires AutoHotkey v2.0
-CoordMode "Mouse", "Window" ; Garante que as coordenadas usem a janela do jogo
+CoordMode "Mouse", "Window"
+SetKeyDelay 50, 50 ; IMPORTANTE: Faz todas as teclas terem um atraso natural (50ms pressionando)
 
 ; Author: Caiofb47.
-; Description: Script para automatizar o processo de prospecting no jogo Prospecting.
+; Description: Script otimizado para Prospecting (Venda Blindada).
 
 ; =====================================================================
-; --- Configurações Principais (Movimento e Coleta) ---
+; --- CONFIGURAÇÕES PRINCIPAIS ---
 ; =====================================================================
-totalRepeticoes := 100      ; Quantas vezes o ciclo todo vai repetir
-tempoAndarRio := 500        ; (ms) Tempo andando (A) para o RIO
-tempoAndarTerra := 500      ; (ms) Tempo andando (D) para a TERRA
-pausaEntreCliques := 1000   ; (ms) Pausa entre cada clique da PARTE 1
-pausaAposEncher := 1000     ; (ms) Pausa após encher a bateia (antes de andar)
-pausaAntesLavar := 500      ; (ms) Pausa entre o clique e segurar o clique (PARTE 3)
-pausaAposLavar := 1000      ; (ms) Pausa após terminar de lavar (antes de vender/andar)
-pausaAntesRepetir := 500    ; (ms) Pausa final antes de recomeçar o ciclo
+totalRepeticoes := 100
+tempoAndarRio := 500
+tempoAndarTerra := 500
+pausaEntreCliques := 1000
+pausaAposEncher := 1000
+pausaAntesLavar := 500
+pausaAposLavar := 1000
+pausaAntesRepetir := 500
+tempoCliqueAreiaPerfeito := 450
 
-tempoCliqueAreiaPerfeito := 450 ; (ms) Tempo para coleta de areia perfeita.
+; --- CONFIGURAÇÃO DE VENDA ---
+ciclosParaVender := 10
+
+; Coordenadas (Vender e Mira)
+posX_Vender := 842
+posY_Vender := 635
+posX_Centro := 964
+posY_Centro := 484
+
+; Teclas e Tempos de Menu
+teclaMenuVendas := "'"
+teclaFerramenta := "1"
+pausaAbrirMenu := 800       ; Aumentei para garantir que a animação termine
+pausaAntesVender := 500
+pausaAposVender := 1000
 
 ; =====================================================================
-; --- CONFIGURAÇÃO: SISTEMA DE VENDA E MIRA ---
+; --- PERFIS ---
 ; =====================================================================
-ciclosParaVender := 10       ; A cada QUANTOS ciclos ele vai clicar em vender?
-
-; Onde está o botão "Vender"?
-posX_Vender := 842          
-posY_Vender := 635          
-
-; Para onde o mouse volta depois? (Centro/Mira)
-posX_Centro := 964          
-posY_Centro := 484          
-
-; Configuração do Menu de Vendas
-teclaMenuVendas := "'"      ; Tecla que abre/fecha o menu (Aspas simples)
-pausaAbrirMenu := 1000       ; Tempo esperando o menu abrir antes de mover o mouse
-pausaAntesVender := 1000     ; Pausa extra antes de começar o movimento
-pausaAposVender := 1000     ; Tempo parado APÓS fechar o menu e voltar a mira
-; ===================================================================== 
-
-
-; ===================================================================== 
-; --- Configuração Perfil 1 (F1) ---
 cliquesParaEncher_F1 := 2
 tempoLavarBateia_F1 := 4000
-
-; --- Configuração Perfil 2 (F2) ---
 cliquesParaEncher_F2 := 1
 tempoLavarBateia_F2 := 3000
-; =====================================================================
-
 
 ; =====================================================================
-; --- TECLAS DE ATALHO (Hotkeys) ---
+; --- HOTKEYS ---
 ; =====================================================================
+F1::ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
+F2::ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
+F4::Reload()
 
-F1:: {
-    ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
-}
-
-F2:: {
-    ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
-}
-
-F4::Reload() ; Para o script
-
-; --- TESTES INDIVIDUAIS ---
+; Testes
 F5::ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
-F6::ColetarAreia(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito)
 F8::LavarBateia(tempoLavarBateia_F1)
-F9::VenderItens() ; Testa a rotina completa de venda (Abrir > Vender > Fechar)
-
+F9::VenderItens() ; Teste a nova lógica de venda aqui
 
 ; =====================================================================
-; --- BLOCOS DE AÇÃO (Funções) ---
+; --- FUNÇÕES DE AÇÃO ---
 ; =====================================================================
+
+; Função auxiliar para garantir que a tecla seja lida pelo jogo
+ApertarComForca(tecla) {
+    SendEvent "{" tecla " down}" ; Segura a tecla
+    Sleep(150)                   ; Mantém segurada por 150ms (Isso é muito tempo pro PC, mas ideal pro jogo)
+    SendEvent "{" tecla " up}"   ; Solta a tecla
+    Sleep(100)                   ; Pausa extra pós-tecla
+}
 
 ColetarAreia(numCliques, tempoClique) {
     Loop numCliques {
-        Send "{LButton down}"
+        SendEvent "{LButton down}"
         Sleep(tempoClique)
-        Send "{LButton up}"
+        SendEvent "{LButton up}"
         Sleep(pausaEntreCliques)
     }
 }
 
 LavarBateia(tempoLavagem) {
-    Click() 
+    Click()
     Sleep(pausaAntesLavar)
-    Send "{LButton down}" 
+    SendEvent "{LButton down}"
     Sleep(tempoLavagem)
-    Send "{LButton up}"
+    SendEvent "{LButton up}"
 }
 
-; --- FUNÇÃO DE VENDER (COM ABERTURA DE MENU) ---
+; --- LÓGICA DE VENDA BLINDADA ---
 VenderItens() {
     Sleep(pausaAntesVender)
     
-    ; 1. ABRE O MENU
-    Send teclaMenuVendas
-    Sleep(pausaAbrirMenu) ; Espera a animação do menu
+    ; 1. DESEQUIPAR (Com força)
+    ApertarComForca(teclaFerramenta)
+    Sleep(500)
     
-    ; 2. Move para o botão de venda
+    ; 2. ABRIR MENU (Com força)
+    ApertarComForca(teclaMenuVendas)
+    Sleep(pausaAbrirMenu) ; Espera animação
+    
+    ; 3. MOVER E "TREMER" O MOUSE
     MouseMove(posX_Vender, posY_Vender)
-    Sleep(300) ; Pequena pausa para o botão "acender"
+    Sleep(100)
+    ; Move 1 pixel pro lado e volta para forçar o jogo a ver o mouse
+    MouseMove(posX_Vender + 2, posY_Vender) 
+    Sleep(50)
+    MouseMove(posX_Vender, posY_Vender)
+    Sleep(300) ; Espera botão "acender"
     
-    ; 3. CLIQUE
-    Click()
-    Sleep(100) 
+    ; 4. CLIQUE DE VENDA (Lento e Seguro)
+    SendEvent "{LButton down}"
+    Sleep(150) ; Segura o clique
+    SendEvent "{LButton up}"
+    Sleep(200)
     
-    ; 4. VOLTA PARA O CENTRO IMEDIATAMENTE
+    ; 5. VOLTAR MIRA
     MouseMove(posX_Centro, posY_Centro)
-    Sleep(200) ; Garante que a mira voltou
+    Sleep(300)
     
-    ; 5. FECHA O MENU
-    Send teclaMenuVendas
+    ; 6. FECHAR MENU (Com força)
+    ApertarComForca(teclaMenuVendas)
+    Sleep(800) ; Espera fechar visualmente
     
-    ; 6. Espera final de segurança
-    Sleep(pausaAposVender) 
+    ; 7. EQUIPAR (Com força)
+    ApertarComForca(teclaFerramenta)
+    Sleep(800)
+    
+    Sleep(pausaAposVender)
 }
 
-
 ; =====================================================================
-; --- FUNÇÃO PRINCIPAL ---
+; --- LOOP PRINCIPAL ---
 ; =====================================================================
-
 ExecutarCiclo(numCliques, tempoClique, tempoLavagem) {
-    
     Loop totalRepeticoes {
-        
         ToolTip "Ciclo: " A_Index " | Próxima venda no ciclo: " (Ceil(A_Index/ciclosParaVender)*ciclosParaVender)
         
-        ; --- PARTE 1: Enchendo ---
+        ; PARTE 1: Encher
         ColetarAreia(numCliques, tempoClique)
         Sleep(pausaAposEncher)
 
-        ; --- PARTE 2: Indo ao Rio ---
-        Send "{a down}"
+        ; PARTE 2: Ir pro Rio
+        SendEvent "{a down}"
         Sleep(tempoAndarRio)
-        Send "{a up}"
+        SendEvent "{a up}"
 
-        ; --- PARTE 3: Lavando ---
+        ; PARTE 3: Lavar
         LavarBateia(tempoLavagem)
         Sleep(pausaAposLavar)
 
-        ; --- LÓGICA DE VENDA (NA ÁGUA) ---
+        ; VENDA (Na água)
         if (Mod(A_Index, ciclosParaVender) == 0) {
-            ToolTip "VENDENDO (Abrindo Menu)..."
-            VenderItens() 
+            ToolTip "VENDENDO..."
+            VenderItens()
         }
         
-        ; --- PARTE 4: Voltando a Terra ---
-        Send "{d down}"
+        ; PARTE 4: Voltar pra Terra
+        SendEvent "{d down}"
         Sleep(tempoAndarTerra)
-        Send "{d up}"
+        SendEvent "{d up}"
         
         Sleep(pausaAntesRepetir)
-        ToolTip 
-        
-    } 
-    
+        ToolTip
+    }
     return
 }
