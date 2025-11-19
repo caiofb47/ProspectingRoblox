@@ -1,38 +1,48 @@
 ﻿#Requires AutoHotkey v2.0
+CoordMode "Mouse", "Window" ; Garante que as coordenadas usem a janela do jogo
 
 ; Author: Caiofb47.
 ; Description: Script para automatizar o processo de prospecting no jogo Prospecting.
 
-; Tutorial:
-; Se pozicionar o personagem corretamente, com o rio a sua esquerda e a área de mineração a sua direita.
-; Pressione F1 para iniciar o ciclo completo (Modo Normal).
-; Pressione F2 para iniciar o ciclo completo (Modo Rápido/2x).
-; Pressione F4 para parar o script a qualquer momento.
-
-; Pressione F5 para apenas COLETAR (usa config F1).
-; Pressione F6 para apenas COLETAR (usa config F2).
-; Pressione F8 para apenas LAVAR (usa config F1).
-
 ; =====================================================================
-; --- Configurações Principais (Compartilhadas) ---
+; --- Configurações Principais (Movimento e Coleta) ---
 ; =====================================================================
 totalRepeticoes := 100      ; Quantas vezes o ciclo todo vai repetir
-tempoAndarRio := 500       ; (ms) Tempo andando (A) para o RIO
-tempoAndarTerra := 500     ; (ms) Tempo andando (D) para a TERRA
+tempoAndarRio := 500        ; (ms) Tempo andando (A) para o RIO
+tempoAndarTerra := 500      ; (ms) Tempo andando (D) para a TERRA
 pausaEntreCliques := 1000   ; (ms) Pausa entre cada clique da PARTE 1
 pausaAposEncher := 1000     ; (ms) Pausa após encher a bateia (antes de andar)
 pausaAntesLavar := 500      ; (ms) Pausa entre o clique e segurar o clique (PARTE 3)
-pausaAposLavar := 1000      ; (ms) Pausa após terminar de lavar (antes de andar)
+pausaAposLavar := 1000      ; (ms) Pausa após terminar de lavar (antes de vender/andar)
 pausaAntesRepetir := 500    ; (ms) Pausa final antes de recomeçar o ciclo
+
+tempoCliqueAreiaPerfeito := 450 ; (ms) Tempo para coleta de areia perfeita.
+
 ; =====================================================================
+; --- CONFIGURAÇÃO: SISTEMA DE VENDA E MIRA ---
+; =====================================================================
+ciclosParaVender := 10       ; A cada QUANTOS ciclos ele vai clicar em vender?
 
+; Onde está o botão "Vender"?
+posX_Vender := 842          
+posY_Vender := 635          
 
-tempoCliqueAreiaPerfeito := 250 ; (ms) Tempo em para coleta de areia perfeita.
+; Para onde o mouse volta depois? (Centro/Mira)
+posX_Centro := 964          
+posY_Centro := 484          
+
+; Configuração do Menu de Vendas
+teclaMenuVendas := "'"      ; Tecla que abre/fecha o menu (Aspas simples)
+pausaAbrirMenu := 1000       ; Tempo esperando o menu abrir antes de mover o mouse
+pausaAntesVender := 1000     ; Pausa extra antes de começar o movimento
+pausaAposVender := 1000     ; Tempo parado APÓS fechar o menu e voltar a mira
+; ===================================================================== 
+
 
 ; ===================================================================== 
 ; --- Configuração Perfil 1 (F1) ---
 cliquesParaEncher_F1 := 2
-tempoLavarBateia_F1 := 5000
+tempoLavarBateia_F1 := 4000
 
 ; --- Configuração Perfil 2 (F2) ---
 cliquesParaEncher_F2 := 1
@@ -45,47 +55,26 @@ tempoLavarBateia_F2 := 3000
 ; =====================================================================
 
 F1:: {
-    ; Chama a função de ciclo com as configurações do PERFIL 1
     ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
 }
 
 F2:: {
-    ; Chama a MESMA função de ciclo, mas com as configurações do PERFIL 2
     ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
 }
 
-; --- TECLA DE FIM (F4) ---
-F4:: {
-    Reload() ; Para e recarrega o script
-}
+F4::Reload() ; Para o script
 
-; --- AÇÃO ÚNICA: Coletar (F5) ---
-F5:: {
-    ; Coleta areia UMA VEZ usando o perfil F1
-    ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
-    return
-}
-
-; --- AÇÃO ÚNICA: Coletar (F6) ---
-F6:: {
-    ; Coleta areia UMA VEZ usando o perfil F2
-    ColetarAreia(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito)
-    return
-}
-
-; --- AÇÃO ÚNICA: Lavar (F8) ---
-F8:: {
-    ; Lava a bateia UMA VEZ usando o perfil F1
-    LavarBateia(tempoLavarBateia_F1)
-    return
-}
+; --- TESTES INDIVIDUAIS ---
+F5::ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
+F6::ColetarAreia(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito)
+F8::LavarBateia(tempoLavarBateia_F1)
+F9::VenderItens() ; Testa a rotina completa de venda (Abrir > Vender > Fechar)
 
 
 ; =====================================================================
-; --- BLOCOS DE AÇÃO (Novas Funções) ---
+; --- BLOCOS DE AÇÃO (Funções) ---
 ; =====================================================================
 
-; --- PARTE 1: Função de Coletar Areia ---
 ColetarAreia(numCliques, tempoClique) {
     Loop numCliques {
         Send "{LButton down}"
@@ -95,48 +84,80 @@ ColetarAreia(numCliques, tempoClique) {
     }
 }
 
-; --- PARTE 3: Função de Lavar a Bateia ---
 LavarBateia(tempoLavagem) {
-    Click() ; 1 clique inicial para ativar
+    Click() 
     Sleep(pausaAntesLavar)
-    Send "{LButton down}" ; Segura o clique para lavar
+    Send "{LButton down}" 
     Sleep(tempoLavagem)
     Send "{LButton up}"
 }
 
+; --- FUNÇÃO DE VENDER (COM ABERTURA DE MENU) ---
+VenderItens() {
+    Sleep(pausaAntesVender)
+    
+    ; 1. ABRE O MENU
+    Send teclaMenuVendas
+    Sleep(pausaAbrirMenu) ; Espera a animação do menu
+    
+    ; 2. Move para o botão de venda
+    MouseMove(posX_Vender, posY_Vender)
+    Sleep(300) ; Pequena pausa para o botão "acender"
+    
+    ; 3. CLIQUE
+    Click()
+    Sleep(100) 
+    
+    ; 4. VOLTA PARA O CENTRO IMEDIATAMENTE
+    MouseMove(posX_Centro, posY_Centro)
+    Sleep(200) ; Garante que a mira voltou
+    
+    ; 5. FECHA O MENU
+    Send teclaMenuVendas
+    
+    ; 6. Espera final de segurança
+    Sleep(pausaAposVender) 
+}
+
 
 ; =====================================================================
-; --- FUNÇÃO PRINCIPAL (A lógica do script fica aqui) ---
+; --- FUNÇÃO PRINCIPAL ---
 ; =====================================================================
 
 ExecutarCiclo(numCliques, tempoClique, tempoLavagem) {
     
-    ; --- LOOP PRINCIPAL: Repete o ciclo X vezes ---
     Loop totalRepeticoes {
         
-        ; --- PARTE 1: Enchendo a bateia com areia ---
-        ColetarAreia(numCliques, tempoClique) ; <-- CHAMA A FUNÇÃO
+        ToolTip "Ciclo: " A_Index " | Próxima venda no ciclo: " (Ceil(A_Index/ciclosParaVender)*ciclosParaVender)
         
-        Sleep(pausaAposEncher) ; Pausa extra após encher
+        ; --- PARTE 1: Enchendo ---
+        ColetarAreia(numCliques, tempoClique)
+        Sleep(pausaAposEncher)
 
-        ; --- PARTE 2: Andar para a esquerda (A) - Indo para o rio ---
+        ; --- PARTE 2: Indo ao Rio ---
         Send "{a down}"
         Sleep(tempoAndarRio)
         Send "{a up}"
 
-        ; --- PARTE 3: Limpando a bateia no rio ---
-        LavarBateia(tempoLavagem) ; <-- CHAMA A FUNÇÃO
+        ; --- PARTE 3: Lavando ---
+        LavarBateia(tempoLavagem)
+        Sleep(pausaAposLavar)
 
-        Sleep(pausaAposLavar) ; Pausa após lavar
+        ; --- LÓGICA DE VENDA (NA ÁGUA) ---
+        if (Mod(A_Index, ciclosParaVender) == 0) {
+            ToolTip "VENDENDO (Abrindo Menu)..."
+            VenderItens() 
+        }
         
-        ; --- PARTE 4: Andar para a direita (D) - Voltando a terra ---
+        ; --- PARTE 4: Voltando a Terra ---
         Send "{d down}"
         Sleep(tempoAndarTerra)
         Send "{d up}"
         
-        Sleep(pausaAntesRepetir) ; Pausa antes de recomeçar o loop
+        Sleep(pausaAntesRepetir)
+        ToolTip 
         
-    } ; Fim do loop principal
+    } 
     
     return
 }
