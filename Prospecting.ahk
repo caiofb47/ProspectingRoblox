@@ -1,34 +1,41 @@
 ﻿#Requires AutoHotkey v2.0
 CoordMode "Mouse", "Window"
-SetKeyDelay 50, 50 ; Atraso natural para o jogo
+SetKeyDelay 50, 50
 
 ; Author: Caiofb47.
-; Description: Script PRO para Prospecting - Organizado e Visual.
+; Description: Script PRO v15 - Com tempo de areia personalizado por perfil.
 
 ; =====================================================================
-; 🛠️ ÁREA DE CONFIGURAÇÃO DOS PERFIS (EDITE AQUI)
+; 🛠️ ÁREA DE CONFIGURAÇÃO DOS PERFIS
 ; =====================================================================
-; Adicione ou altere os perfis aqui.
-; Formato: "Tecla": {Nome: "Descrição", Cliques: X, Lavar: Y}
+; Adicione "TempoAreia" no perfil se quiser que ele seja diferente do padrão.
+; Se não colocar, ele usa o padrão de 450ms.
 
 ConfigPerfis := Map()
+
+; F1: Usa o tempo de areia PADRÃO (450ms)
 ConfigPerfis["F1"] := {Nome: "Sem Totem (Padrão)",    Cliques: 2, TempoLavar: 8000}
+
+; F2: Usa o tempo de areia PADRÃO (450ms)
 ConfigPerfis["F2"] := {Nome: "Totem Força (x2)",      Cliques: 1, TempoLavar: 5000}
-ConfigPerfis["F3"] := {Nome: "Totem Força + Ilum.",   Cliques: 1, TempoLavar: 5000}
+
+; F3: Tem tempo de areia PERSONALIZADO (Ex: 300ms)
+ConfigPerfis["F3"] := {Nome: "Totem Força + Ilum.",   Cliques: 2, TempoLavar: 5000, TempoAreia: 300}
+
 
 ; =====================================================================
 ; ⚙️ CONFIGURAÇÕES GERAIS DO JOGO
 ; =====================================================================
 GlobalConfig := {
-    Repeticoes: 500,            ; Total de ciclos
-    CiclosVenda: 10,            ; Vender a cada X ciclos
-    TempoCliqueAreia: 450,      ; Tempo do clique perfeito
+    Repeticoes: 500,            
+    CiclosVenda: 10,            
+    TempoCliqueAreia: 450,      ; <--- ESSE É O PADRÃO SE O PERFIL NÃO TIVER UM ESPECÍFICO
     
     ; Tempos de Movimento
     AndarRio: 500,
     AndarTerra: 500,
     
-    ; Pausas (Delays)
+    ; Pausas
     EntreCliques: 1000,
     AposEncher: 1000,
     AntesLavar: 500,
@@ -43,63 +50,59 @@ GlobalConfig := {
 }
 
 ; =====================================================================
-; 🎮 HOTKEYS (CONTROLES)
+; 🎮 HOTKEYS
 ; =====================================================================
-
-; --- Inicia os Perfis Automaticamente baseado na configuração acima ---
 F1::IniciarPerfil("F1")
 F2::IniciarPerfil("F2")
 F3::IniciarPerfil("F3")
 
-; --- Parada de Emergência ---
 F4:: {
-    ; Solta tudo que possa estar segurado
     SendEvent "{LButton up}"
     SendEvent "{a up}"
     SendEvent "{d up}"
     SendEvent "{" GlobalConfig.Teclas.Ferramenta " up}"
     SendEvent "{" GlobalConfig.Teclas.Menu " up}"
-    
-    ToolTip "🛑 SCRIPT PARADO PELO USUÁRIO"
+    ToolTip "🛑 SCRIPT PARADO!"
     Sleep(1000)
     ToolTip
     Reload()
 }
 
-; --- Testes Rápidos ---
+; Testes
 F5::ColetarAreia(ConfigPerfis["F1"].Cliques, GlobalConfig.TempoCliqueAreia)
-F8::LavarBateia(ConfigPerfis["F1"].TempoLavar)
 F9::VenderItens()
 
 
 ; =====================================================================
-; 🧠 LÓGICA PRINCIPAL (NÃO PRECISA MEXER MUITO AQUI)
+; 🧠 LÓGICA PRINCIPAL
 ; =====================================================================
 
-; Função Wrapper para iniciar o ciclo com os dados corretos
 IniciarPerfil(tecla) {
     if !ConfigPerfis.Has(tecla)
         return
     
     perfil := ConfigPerfis[tecla]
     
-    MsgBox("Iniciando: " perfil.Nome "`n`nCliques: " perfil.Cliques "`nTempo Lavar: " perfil.TempoLavar, "Preparar...", "T1")
+    ; Lógica inteligente para decidir o tempo da areia
+    tempoAreiaUsado := perfil.HasOwnProp("TempoAreia") ? perfil.TempoAreia : GlobalConfig.TempoCliqueAreia
     
-    ExecutarCiclo(perfil)
+    MsgBox("Iniciando: " perfil.Nome "`n`nCliques: " perfil.Cliques "`nTempo Lavar: " perfil.TempoLavar "`nTempo Areia: " tempoAreiaUsado, "Info", "T1")
+    
+    ExecutarCiclo(perfil, tempoAreiaUsado)
 }
 
-ExecutarCiclo(perfil) {
+ExecutarCiclo(perfil, tempoAreiaParaEsteCiclo) {
     Loop GlobalConfig.Repeticoes {
         
-        ; --- FEEDBACK VISUAL MELHORADO ---
         proximaVenda := (Ceil(A_Index/GlobalConfig.CiclosVenda)*GlobalConfig.CiclosVenda)
-        textoInfo := "► PERFIL ATIVO: " perfil.Nome "`n"
+        textoInfo := "► PERFIL: " perfil.Nome "`n"
                    . "🔄 Ciclo: " A_Index " / " GlobalConfig.Repeticoes "`n"
-                   . "💰 Próxima Venda: Ciclo " proximaVenda
+                   . "⏳ Areia: " tempoAreiaParaEsteCiclo "ms | Lavar: " perfil.TempoLavar "ms`n"
+                   . "💰 Venda no ciclo: " proximaVenda
         ToolTip textoInfo
         
-        ; 1. Encher
-        ColetarAreia(perfil.Cliques, GlobalConfig.TempoCliqueAreia)
+        ; 1. Encher (Usa o tempo decidido na inicialização)
+        ColetarAreia(perfil.Cliques, tempoAreiaParaEsteCiclo)
         Sleep(GlobalConfig.AposEncher)
 
         ; 2. Ir pro Rio
@@ -111,9 +114,9 @@ ExecutarCiclo(perfil) {
         LavarBateia(perfil.TempoLavar)
         Sleep(GlobalConfig.AposLavar)
 
-        ; LÓGICA DE VENDA (NA ÁGUA)
+        ; Venda
         if (Mod(A_Index, GlobalConfig.CiclosVenda) == 0) {
-            ToolTip "💰 HORA DE VENDER...`n(Executando rotina de venda)"
+            ToolTip "💰 VENDENDO..."
             VenderItens()
         }
         
@@ -124,12 +127,12 @@ ExecutarCiclo(perfil) {
         
         Sleep(GlobalConfig.AntesRepetir)
     }
-    ToolTip "✅ FIM DO CICLO!"
-    SetTimer () => ToolTip(), -3000 ; Limpa tooltip após 3s
+    ToolTip "✅ FIM!"
+    SetTimer () => ToolTip(), -3000
 }
 
 ; =====================================================================
-; 🔧 FUNÇÕES DE AÇÃO (AGORA USANDO O OBJETO DE CONFIGURAÇÃO)
+; 🔧 FUNÇÕES DE AÇÃO
 ; =====================================================================
 
 ApertarComForca(tecla) {
