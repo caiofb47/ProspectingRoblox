@@ -8,7 +8,7 @@ SetKeyDelay 50, 50 ; Atraso natural para o Roblox registrar as teclas
 ; =====================================================================
 ; --- CONFIGURAÇÕES PRINCIPAIS ---
 ; =====================================================================
-totalRepeticoes := 100
+totalRepeticoes := 500
 tempoAndarRio := 500
 tempoAndarTerra := 500
 pausaEntreCliques := 1000
@@ -16,7 +16,7 @@ pausaAposEncher := 1000
 pausaAntesLavar := 500
 pausaAposLavar := 1000
 pausaAntesRepetir := 500
-tempoCliqueAreiaPerfeito := 425
+tempoCliqueAreiaPerfeito := 450
 
 ; --- CONFIGURAÇÃO DE VENDA ---
 ciclosParaVender := 10
@@ -38,15 +38,26 @@ pausaAposVender := 1000
 ; --- PERFIS ---
 ; =====================================================================
 cliquesParaEncher_F1 := 2
-tempoLavarBateia_F1 := 4000
+tempoLavarBateia_F1 := 8000
+
 cliquesParaEncher_F2 := 1
-tempoLavarBateia_F2 := 3000
+tempoLavarBateia_F2 := 5000
+
+cliquesParaEncher_F3 := 1
+tempoLavarBateia_F3 := 5000
 
 ; =====================================================================
-; --- HOTKEYS ---
+; --- Opções ---
 ; =====================================================================
+
+; Sem Totem
 F1::ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
+
+; Totem força
 F2::ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
+
+; Totem força + totem iluminante
+F3::ExecutarCiclo(cliquesParaEncher_F3, tempoCliqueAreiaPerfeito, tempoLavarBateia_F3)
 
 ; F4 AGORA COM SEGURANÇA
 F4:: {
