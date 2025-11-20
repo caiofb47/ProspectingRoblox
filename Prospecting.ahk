@@ -1,84 +1,135 @@
 ﻿#Requires AutoHotkey v2.0
 CoordMode "Mouse", "Window"
-SetKeyDelay 50, 50 ; Atraso natural para o Roblox registrar as teclas
+SetKeyDelay 50, 50 ; Atraso natural para o jogo
 
 ; Author: Caiofb47.
-; Description: Script otimizado para Prospecting (Venda Blindada + Parada Segura).
+; Description: Script PRO para Prospecting - Organizado e Visual.
 
 ; =====================================================================
-; --- CONFIGURAÇÕES PRINCIPAIS ---
+; 🛠️ ÁREA DE CONFIGURAÇÃO DOS PERFIS (EDITE AQUI)
 ; =====================================================================
-totalRepeticoes := 500
-tempoAndarRio := 500
-tempoAndarTerra := 500
-pausaEntreCliques := 1000
-pausaAposEncher := 1000
-pausaAntesLavar := 500
-pausaAposLavar := 1000
-pausaAntesRepetir := 500
-tempoCliqueAreiaPerfeito := 450
+; Adicione ou altere os perfis aqui.
+; Formato: "Tecla": {Nome: "Descrição", Cliques: X, Lavar: Y}
 
-; --- CONFIGURAÇÃO DE VENDA ---
-ciclosParaVender := 10
-
-; Coordenadas (Vender e Mira)
-posX_Vender := 842
-posY_Vender := 635
-posX_Centro := 964
-posY_Centro := 484
-
-; Teclas e Tempos de Menu
-teclaMenuVendas := "'"
-teclaFerramenta := "1"
-pausaAbrirMenu := 800
-pausaAntesVender := 500
-pausaAposVender := 1000
+ConfigPerfis := Map()
+ConfigPerfis["F1"] := {Nome: "Sem Totem (Padrão)",    Cliques: 2, TempoLavar: 8000}
+ConfigPerfis["F2"] := {Nome: "Totem Força (x2)",      Cliques: 1, TempoLavar: 5000}
+ConfigPerfis["F3"] := {Nome: "Totem Força + Ilum.",   Cliques: 1, TempoLavar: 5000}
 
 ; =====================================================================
-; --- PERFIS ---
+; ⚙️ CONFIGURAÇÕES GERAIS DO JOGO
 ; =====================================================================
-cliquesParaEncher_F1 := 2
-tempoLavarBateia_F1 := 8000
-
-cliquesParaEncher_F2 := 1
-tempoLavarBateia_F2 := 5000
-
-cliquesParaEncher_F3 := 1
-tempoLavarBateia_F3 := 5000
+GlobalConfig := {
+    Repeticoes: 500,            ; Total de ciclos
+    CiclosVenda: 10,            ; Vender a cada X ciclos
+    TempoCliqueAreia: 450,      ; Tempo do clique perfeito
+    
+    ; Tempos de Movimento
+    AndarRio: 500,
+    AndarTerra: 500,
+    
+    ; Pausas (Delays)
+    EntreCliques: 1000,
+    AposEncher: 1000,
+    AntesLavar: 500,
+    AposLavar: 1000,
+    AntesRepetir: 500,
+    
+    ; Venda
+    PosVender: {X: 842, Y: 635},
+    PosCentro: {X: 964, Y: 484},
+    Teclas: {Menu: "'", Ferramenta: "1"},
+    DelaysVenda: {AbrirMenu: 800, AntesMove: 500, AposVenda: 1000}
+}
 
 ; =====================================================================
-; --- Opções ---
+; 🎮 HOTKEYS (CONTROLES)
 ; =====================================================================
 
-; Sem Totem
-F1::ExecutarCiclo(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito, tempoLavarBateia_F1)
+; --- Inicia os Perfis Automaticamente baseado na configuração acima ---
+F1::IniciarPerfil("F1")
+F2::IniciarPerfil("F2")
+F3::IniciarPerfil("F3")
 
-; Totem força
-F2::ExecutarCiclo(cliquesParaEncher_F2, tempoCliqueAreiaPerfeito, tempoLavarBateia_F2)
-
-; Totem força + totem iluminante
-F3::ExecutarCiclo(cliquesParaEncher_F3, tempoCliqueAreiaPerfeito, tempoLavarBateia_F3)
-
-; F4 AGORA COM SEGURANÇA
+; --- Parada de Emergência ---
 F4:: {
+    ; Solta tudo que possa estar segurado
     SendEvent "{LButton up}"
     SendEvent "{a up}"
     SendEvent "{d up}"
-    SendEvent "{1 up}"
-    SendEvent "{' up}"
-    ToolTip "🛑 PARANDO..."
-    Sleep(500)
+    SendEvent "{" GlobalConfig.Teclas.Ferramenta " up}"
+    SendEvent "{" GlobalConfig.Teclas.Menu " up}"
+    
+    ToolTip "🛑 SCRIPT PARADO PELO USUÁRIO"
+    Sleep(1000)
     ToolTip
     Reload()
 }
 
-; Testes
-F5::ColetarAreia(cliquesParaEncher_F1, tempoCliqueAreiaPerfeito)
-F8::LavarBateia(tempoLavarBateia_F1)
+; --- Testes Rápidos ---
+F5::ColetarAreia(ConfigPerfis["F1"].Cliques, GlobalConfig.TempoCliqueAreia)
+F8::LavarBateia(ConfigPerfis["F1"].TempoLavar)
 F9::VenderItens()
 
+
 ; =====================================================================
-; --- FUNÇÕES DE AÇÃO ---
+; 🧠 LÓGICA PRINCIPAL (NÃO PRECISA MEXER MUITO AQUI)
+; =====================================================================
+
+; Função Wrapper para iniciar o ciclo com os dados corretos
+IniciarPerfil(tecla) {
+    if !ConfigPerfis.Has(tecla)
+        return
+    
+    perfil := ConfigPerfis[tecla]
+    
+    MsgBox("Iniciando: " perfil.Nome "`n`nCliques: " perfil.Cliques "`nTempo Lavar: " perfil.TempoLavar, "Preparar...", "T1")
+    
+    ExecutarCiclo(perfil)
+}
+
+ExecutarCiclo(perfil) {
+    Loop GlobalConfig.Repeticoes {
+        
+        ; --- FEEDBACK VISUAL MELHORADO ---
+        proximaVenda := (Ceil(A_Index/GlobalConfig.CiclosVenda)*GlobalConfig.CiclosVenda)
+        textoInfo := "► PERFIL ATIVO: " perfil.Nome "`n"
+                   . "🔄 Ciclo: " A_Index " / " GlobalConfig.Repeticoes "`n"
+                   . "💰 Próxima Venda: Ciclo " proximaVenda
+        ToolTip textoInfo
+        
+        ; 1. Encher
+        ColetarAreia(perfil.Cliques, GlobalConfig.TempoCliqueAreia)
+        Sleep(GlobalConfig.AposEncher)
+
+        ; 2. Ir pro Rio
+        SendEvent "{a down}"
+        Sleep(GlobalConfig.AndarRio)
+        SendEvent "{a up}"
+
+        ; 3. Lavar
+        LavarBateia(perfil.TempoLavar)
+        Sleep(GlobalConfig.AposLavar)
+
+        ; LÓGICA DE VENDA (NA ÁGUA)
+        if (Mod(A_Index, GlobalConfig.CiclosVenda) == 0) {
+            ToolTip "💰 HORA DE VENDER...`n(Executando rotina de venda)"
+            VenderItens()
+        }
+        
+        ; 4. Voltar pra Terra
+        SendEvent "{d down}"
+        Sleep(GlobalConfig.AndarTerra)
+        SendEvent "{d up}"
+        
+        Sleep(GlobalConfig.AntesRepetir)
+    }
+    ToolTip "✅ FIM DO CICLO!"
+    SetTimer () => ToolTip(), -3000 ; Limpa tooltip após 3s
+}
+
+; =====================================================================
+; 🔧 FUNÇÕES DE AÇÃO (AGORA USANDO O OBJETO DE CONFIGURAÇÃO)
 ; =====================================================================
 
 ApertarComForca(tecla) {
@@ -93,36 +144,38 @@ ColetarAreia(numCliques, tempoClique) {
         SendEvent "{LButton down}"
         Sleep(tempoClique)
         SendEvent "{LButton up}"
-        Sleep(pausaEntreCliques)
+        Sleep(GlobalConfig.EntreCliques)
     }
 }
 
 LavarBateia(tempoLavagem) {
     Click()
-    Sleep(pausaAntesLavar)
+    Sleep(GlobalConfig.AntesLavar)
     SendEvent "{LButton down}"
     Sleep(tempoLavagem)
     SendEvent "{LButton up}"
 }
 
-; --- LÓGICA DE VENDA BLINDADA ---
 VenderItens() {
-    Sleep(pausaAntesVender)
+    Sleep(GlobalConfig.DelaysVenda.AntesMove)
     
     ; 1. DESEQUIPAR
-    ApertarComForca(teclaFerramenta)
+    ApertarComForca(GlobalConfig.Teclas.Ferramenta)
     Sleep(500)
     
     ; 2. ABRIR MENU
-    ApertarComForca(teclaMenuVendas)
-    Sleep(pausaAbrirMenu)
+    ApertarComForca(GlobalConfig.Teclas.Menu)
+    Sleep(GlobalConfig.DelaysVenda.AbrirMenu)
     
-    ; 3. MOVER E "TREMER" O MOUSE
-    MouseMove(posX_Vender, posY_Vender)
+    ; 3. MOVER E "TREMER"
+    posX := GlobalConfig.PosVender.X
+    posY := GlobalConfig.PosVender.Y
+    
+    MouseMove(posX, posY)
     Sleep(100)
-    MouseMove(posX_Vender + 2, posY_Vender) 
+    MouseMove(posX + 2, posY) 
     Sleep(50)
-    MouseMove(posX_Vender, posY_Vender)
+    MouseMove(posX, posY)
     Sleep(300)
     
     ; 4. CLIQUE DE VENDA
@@ -132,53 +185,16 @@ VenderItens() {
     Sleep(200)
     
     ; 5. VOLTAR MIRA
-    MouseMove(posX_Centro, posY_Centro)
+    MouseMove(GlobalConfig.PosCentro.X, GlobalConfig.PosCentro.Y)
     Sleep(300)
     
     ; 6. FECHAR MENU
-    ApertarComForca(teclaMenuVendas)
+    ApertarComForca(GlobalConfig.Teclas.Menu)
     Sleep(800)
     
     ; 7. EQUIPAR
-    ApertarComForca(teclaFerramenta)
+    ApertarComForca(GlobalConfig.Teclas.Ferramenta)
     Sleep(800)
     
-    Sleep(pausaAposVender)
-}
-
-; =====================================================================
-; --- LOOP PRINCIPAL ---
-; =====================================================================
-ExecutarCiclo(numCliques, tempoClique, tempoLavagem) {
-    Loop totalRepeticoes {
-        ToolTip "Ciclo: " A_Index " | Próxima venda no ciclo: " (Ceil(A_Index/ciclosParaVender)*ciclosParaVender)
-        
-        ; PARTE 1: Encher
-        ColetarAreia(numCliques, tempoClique)
-        Sleep(pausaAposEncher)
-
-        ; PARTE 2: Ir pro Rio
-        SendEvent "{a down}"
-        Sleep(tempoAndarRio)
-        SendEvent "{a up}"
-
-        ; PARTE 3: Lavar
-        LavarBateia(tempoLavagem)
-        Sleep(pausaAposLavar)
-
-        ; VENDA (Na água)
-        if (Mod(A_Index, ciclosParaVender) == 0) {
-            ToolTip "VENDENDO..."
-            VenderItens()
-        }
-        
-        ; PARTE 4: Voltar pra Terra
-        SendEvent "{d down}"
-        Sleep(tempoAndarTerra)
-        SendEvent "{d up}"
-        
-        Sleep(pausaAntesRepetir)
-        ToolTip
-    }
-    return
+    Sleep(GlobalConfig.DelaysVenda.AposVenda)
 }
